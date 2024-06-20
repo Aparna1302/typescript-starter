@@ -1,29 +1,50 @@
 name: CI/CD Pipeline
-'on':
+
+on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - master
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version:
-          - 14.x
-          - 16.x
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: 'Set up Node.js ${{ matrix.node-version }}'
-        uses: actions/setup-node@v2
-        with:
-          node-version: '${{ matrix.node-version }}'
-      - name: Install dependencies
-        run: npm install
-      - name: Run tests
-        run: npm test
-      - name: Build application
-        run: npm run build
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run build
+      run: npm run build
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Deploy to EC2
+      env:
+        EC2_USER: ec2-user
+        EC2_HOST: ec2-16-170-240-34.eu-north-1.compute.amazonaws.com
+        EC2_KEY: Aparna.pem
+      run: |
+        scp -i Aparna.pem -r . ec2-user@ec2-16-170-240-34.eu-north-1.compute.amazonaws.com:/home/ec2-user/typescript-starter
+        ssh -i Aparna.pem ec2-user@$ec2-16-170-240-34.eu-north-1.compute.amazonaws.com "cd /home/ec2
