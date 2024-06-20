@@ -30,8 +30,6 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
             cd typescript-starter
-            git pull origin main
-            npm install
             npm run build
-            sudo systemctl restart your-application
+            
 
