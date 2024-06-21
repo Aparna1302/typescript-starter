@@ -1,35 +1,34 @@
-name: CI/CD with AWS EC2
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
       - name: Install dependencies
         run: npm install
 
-      - name: Build
+      - name: Build the application
         run: npm run build
 
       - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script: |
-            cd typescript-starter
-            npm run build
-            
-
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USERNAME }}
+          EC2_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+        run: |
+         scp -i $EC2_PRIVATE_KEY -r ./dist/* $EC2_USERNAME@$EC2_HOST:/home/ec2-user/typescript-starter
+          ssh -i $EC2_PRIVATE_KEY $EC2_USERAME@$EC2_HOST 'pm2 restart all'
